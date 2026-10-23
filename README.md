@@ -58,6 +58,8 @@ A passive RJ45 plug that loops the 10/100 TX pair back to the RX pair:
 Patches target **U-Boot v2024.10** as built by the Armbian build system for board
 `napi-c` (`BOOTCONFIG=napi-c-rk3308_defconfig`, `BOOTPATCHDIR=v2024.10`).
 
+> **U-Boot version is pinned.** The NAPI-C board config (`config/boards/napi-c.csc`) sets `BOOTBRANCH_BOARD="tag:v2024.10"`, overriding the Rockchip family default (a newer tag). These patches therefore target upstream U-Boot **tag `v2024.10`** (commit `f919c3a`, "Prepare v2024.10") and may not apply cleanly to other versions.
+
 Drop the patches into `patch/u-boot/v2024.10/board_napi-c/` of the Armbian build
 tree and build the bootloader:
 

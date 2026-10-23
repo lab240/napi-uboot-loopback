@@ -60,6 +60,8 @@ BootROM ──> U-Boot с внутренней флешки (mmc0)
 Патчи рассчитаны на **U-Boot v2024.10**, как его собирает система сборки Armbian для
 платы `napi-c` (`BOOTCONFIG=napi-c-rk3308_defconfig`, `BOOTPATCHDIR=v2024.10`).
 
+> **Версия U-Boot зафиксирована.** В конфиге платы NAPI-C (`config/boards/napi-c.csc`) задано `BOOTBRANCH_BOARD="tag:v2024.10"`, что переопределяет дефолт семейства Rockchip (более новый тег). Поэтому патчи рассчитаны на upstream U-Boot **tag `v2024.10`** (коммит `f919c3a`, «Prepare v2024.10») и могут не накладываться чисто на другие версии.
+
 Положите патчи в `patch/u-boot/v2024.10/board_napi-c/` дерева сборки Armbian и
 соберите загрузчик:
 
