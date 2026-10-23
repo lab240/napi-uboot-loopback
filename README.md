@@ -1,5 +1,7 @@
 # napi-uboot-loopback
 
+*Русская версия — [README.rus](README.rus).*
+
 Boot-source selection for **NAPI-C** boards (Rockchip RK3308, Armbian) driven by a
 **single-port Ethernet loopback plug** on the onboard GMAC port (`end0`):
 
