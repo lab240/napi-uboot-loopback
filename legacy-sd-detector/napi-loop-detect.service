@@ -1,0 +1,14 @@
+[Unit]
+Description=NAPI SD->eMMC loopback boot selector (periodic)
+Documentation=man:napi-loop-detect
+After=network.target local-fs.target
+Conflicts=shutdown.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/napi-loop-detect.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

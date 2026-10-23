@@ -1,0 +1,24 @@
+# Config for napi-loop-detect (periodic SD->eMMC boot selector).
+
+# Interface(s) to probe for the single-port loopback plug (space separated).
+LOOP_IFS="end0"
+
+# Seconds between checks; the last value repeats forever (backoff schedule).
+# Production (gentle on the network):
+#CHECK_INTERVALS="60 60 60 60 60 300 300 300 900"
+# TEST: frequent polling to catch errors.
+CHECK_INTERVALS="5"
+
+# How long each probe listens for the echo (seconds).
+PROBE_LISTEN="1.0"
+
+# Require this many consecutive positive probes before switching (debounce).
+CONFIRM=2
+
+# Log every probe result (1=yes). Noisy; use while testing.
+VERBOSE=1
+
+# Raw sector on the SD read by U-Boot's boot.scr for the NAND/PERM flag.
+FLAG_SECTOR=30000
+# eMMC rootfs label, used to verify the eMMC is bootable before switching.
+EMMC_LABEL="armbi_emmc"
