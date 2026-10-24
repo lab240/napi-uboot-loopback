@@ -75,21 +75,33 @@ Output: `output/debs/linux-u-boot-napi-c-current_*.deb`, containing the flashabl
 * `patches/1130-add-board-napi-c.patch` — the NAPI-C board itself (DT, defconfig). Baseline, included for a self-contained set.
 * `patches/1132-napi-loopdetect.patch` — adds the `loopdetect` command (`cmd/napi_loopdetect.c`, Kconfig, Makefile) and enables it in the defconfig.
 * `patches/1133-napi-loopdetect-wire-boot.patch` — wires it into the boot flow via `CONFIG_PREBOOT` / `boot_targets`.
-* `patches/1134-loopdetect-coldboot-aneg-timeout.patch` — raises `CONFIG_PHY_ANEG_TIMEOUT` to 20000 ms so `loopdetect` waits for the slow loopback link on a cold boot (see *Cold boot* below).
+* `patches/1134-loopdetect-coldboot-aneg-timeout.patch` — raises `CONFIG_PHY_ANEG_TIMEOUT` to 20000 ms as a fallback so `loopdetect` can still wait out a slow autoneg link on a cold boot (see *Cold boot* below).
+* `patches/1135-loopdetect-force-phy-100fd.patch` — forces the onboard PHY to a fixed 100BASE-TX full-duplex link with autoneg disabled (`CONFIG_NAPI_PHY_FORCE_100FD`), so the loopback links in ~1–2 s and a no-loop boot is detected in ~3 s instead of waiting out the timeout (see *Cold boot*).
 
 ### Cold boot
 
 On a passive single-port loopback the PHY autonegotiates against its own
-reflected link pulses, and the link takes ~12–13 s to come up on a cold
-power-on (a warm `reboot` keeps the PHY linked, so it comes up at once). With
-U-Boot's default `CONFIG_PHY_ANEG_TIMEOUT` of 4000 ms, `eth_init()` in
+reflected link pulses, and with autoneg the link takes ~12–13 s to come up on
+a cold power-on (a warm `reboot` keeps the PHY linked, so it comes up at once).
+With U-Boot's default `CONFIG_PHY_ANEG_TIMEOUT` of 4000 ms, `eth_init()` in
 `loopdetect` would time out with the link still down and wrongly report no
 loop → the board booted the SD on cold power-on even with the plug fitted.
-Patch `1134` raises the timeout to 20000 ms so the slow link comes up before
-`loopdetect` probes. Trade-off: with **no** loopback the link never comes up,
-so a no-loop (SD) cold boot waits out the timeout and is ~15 s slower.
-Verified on hardware: cold power-on with the plug → `armbi_nand`; without →
-`armbi_root`.
+
+Patch `1134` first fixed this by raising the timeout to 20000 ms so the slow
+autoneg link comes up before `loopdetect` probes — correct, but a no-loop (SD)
+cold boot then waited out that ~20 s timeout.
+
+Patch `1135` removes that wait: it disables autonegotiation and forces the PHY
+to 100BASE-TX full-duplex. The loopback then links on signal detect in ~1–2 s
+(no autoneg handshake), and when no loopback is present the link stays down and
+is seen at once, so `loopdetect` only polls for ~3 s. `CONFIG_PHY_ANEG_TIMEOUT`
+is left at 20000 ms purely as a fallback: if forcing ever fails the behaviour
+reverts to the (slower but correct) autoneg path, so `1135` is a strict
+improvement with no regression.
+
+Verified on hardware (cold power-on, both patches): with the plug → `armbi_nand`,
+`end0` link up at 100/full; without the plug → `armbi_root`, and with `1135` the
+U-Boot phase is ~4 s instead of ~20 s.
 
 ## Deploy
 
