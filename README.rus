@@ -77,6 +77,20 @@ OFFLINE_WORK=yes ARTIFACT_IGNORE_CACHE=yes ./compile.sh uboot BOARD=napi-c BRANC
 * `patches/1130-add-board-napi-c.patch` — сама плата NAPI-C (DT, defconfig). Baseline, включён для самодостаточности набора.
 * `patches/1132-napi-loopdetect.patch` — добавляет команду `loopdetect` (`cmd/napi_loopdetect.c`, Kconfig, Makefile) и включает её в defconfig.
 * `patches/1133-napi-loopdetect-wire-boot.patch` — увязка в boot-флоу через `CONFIG_PREBOOT` / `boot_targets`.
+* `patches/1134-loopdetect-coldboot-aneg-timeout.patch` — поднимает `CONFIG_PHY_ANEG_TIMEOUT` до 20000 мс, чтобы `loopdetect` дождался медленного линка петли на холодном старте (см. *Холодный старт* ниже).
+
+### Холодный старт
+
+На пассивной одно-портовой петле PHY автонегоциирует сам с собой (со своим
+же отражённым линк-импульсом), и на холодном включении линк встаёт ~12–13 с
+(тёплый `reboot` держит PHY в линке, поэтому там он встаёт сразу). При дефолтном
+`CONFIG_PHY_ANEG_TIMEOUT` = 4000 мс `eth_init()` в `loopdetect` отваливался по
+таймауту с ещё не поднятым линком и ошибочно сообщал об отсутствии петли → на
+холодную плата грузилась с SD даже с воткнутой заглушкой. Патч `1134` поднимает
+таймаут до 20000 мс, чтобы медленный линк успел встать до опроса. Компромисс:
+**без** петли линк не встаёт никогда, поэтому холодная загрузка без петли (SD)
+досиживает таймаут и идёт на ~15 с дольше. Проверено на железе: холодное
+включение с заглушкой → `armbi_nand`; без неё → `armbi_root`.
 
 ## Прошивка
 

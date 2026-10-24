@@ -75,6 +75,21 @@ Output: `output/debs/linux-u-boot-napi-c-current_*.deb`, containing the flashabl
 * `patches/1130-add-board-napi-c.patch` — the NAPI-C board itself (DT, defconfig). Baseline, included for a self-contained set.
 * `patches/1132-napi-loopdetect.patch` — adds the `loopdetect` command (`cmd/napi_loopdetect.c`, Kconfig, Makefile) and enables it in the defconfig.
 * `patches/1133-napi-loopdetect-wire-boot.patch` — wires it into the boot flow via `CONFIG_PREBOOT` / `boot_targets`.
+* `patches/1134-loopdetect-coldboot-aneg-timeout.patch` — raises `CONFIG_PHY_ANEG_TIMEOUT` to 20000 ms so `loopdetect` waits for the slow loopback link on a cold boot (see *Cold boot* below).
+
+### Cold boot
+
+On a passive single-port loopback the PHY autonegotiates against its own
+reflected link pulses, and the link takes ~12–13 s to come up on a cold
+power-on (a warm `reboot` keeps the PHY linked, so it comes up at once). With
+U-Boot's default `CONFIG_PHY_ANEG_TIMEOUT` of 4000 ms, `eth_init()` in
+`loopdetect` would time out with the link still down and wrongly report no
+loop → the board booted the SD on cold power-on even with the plug fitted.
+Patch `1134` raises the timeout to 20000 ms so the slow link comes up before
+`loopdetect` probes. Trade-off: with **no** loopback the link never comes up,
+so a no-loop (SD) cold boot waits out the timeout and is ~15 s slower.
+Verified on hardware: cold power-on with the plug → `armbi_nand`; without →
+`armbi_root`.
 
 ## Deploy
 
